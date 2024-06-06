@@ -7,6 +7,7 @@ import os.path
 import json
 import string
 import numpy as np
+import textwrap
 
 from .exceptions import LimeError
 
@@ -169,17 +170,24 @@ class Explanation(object):
         fig = plt.figure(figsize=figsize)
         vals = [x[1] for x in exp]
         names = [x[0] for x in exp]
+
         vals.reverse()
         names.reverse()
         colors = ['green' if x > 0 else 'red' for x in vals]
         pos = np.arange(len(exp)) + .5
         plt.barh(pos, vals, align='center', color=colors)
+
+        # Enable word wrapping for the labels on the y-axis
+        names = [x[0].replace('_', ' ') for x in exp]  # Replace "_" with a space in each 
+        # names = [textwrap.fill(name, width=10) for name in names]
         plt.yticks(pos, names)
         if self.mode == "classification":
             title = 'Local explanation for class %s' % self.class_names[label]
         else:
             title = 'Local explanation'
         plt.title(title)
+        # Adjust subplot parameters
+        plt.tight_layout()
         return fig
 
     def show_in_notebook(self,
@@ -258,15 +266,16 @@ class Explanation(object):
         out += u'''
         <div class="lime top_div" id="top_div%s"></div>
         ''' % random_id
-
+        import copy
         predict_proba_js = ''
         if self.mode == "classification" and predict_proba:
+            names = jsonize(list([str(x) for x in self.class_names]))
             predict_proba_js = u'''
             var pp_div = top_div.append('div')
                                 .classed('lime predict_proba', true);
             var pp_svg = pp_div.append('svg').style('width', '100%%');
             var pp = new lime.PredictProba(pp_svg, %s, %s);
-            ''' % (jsonize([str(x) for x in self.class_names]),
+            ''' % (names,
                    jsonize(list(self.predict_proba.astype(float))))
 
         predict_value_js = ''
@@ -294,7 +303,8 @@ class Explanation(object):
                 exp.show(%s, %d, exp_div);
                 ''' % (exp, label)
         else:
-            exp = jsonize(self.as_list())
+            temp = [(feature.replace('_', ' '), weight) for feature, weight in self.as_list()]
+            exp = jsonize(temp)
             exp_js += u'''
             exp_div = top_div.append('div').classed('lime explanation', true);
             exp.show(%s, %s, exp_div);

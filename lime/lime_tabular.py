@@ -87,9 +87,12 @@ class TableDomainMapper(explanation.DomainMapper):
         weights = [0] * len(self.feature_names)
         for x in exp:
             weights[x[0]] = x[1]
+        #I make this change becuause I do not want _ in feature names when show them
+        exp_feature_names_copy = copy.deepcopy(self.exp_feature_names)
+        exp_feature_names_copy = [x.replace('_', ' ') for x in exp_feature_names_copy]  # Replace "_" with a space in each name
         if self.feature_indexes is not None:
             # Sparse case: only display the non-zero values and importances
-            fnames = [self.exp_feature_names[i] for i in self.feature_indexes]
+            fnames = [exp_feature_names_copy[i] for i in self.feature_indexes]
             fweights = [weights[i] for i in self.feature_indexes]
             if show_all:
                 out_list = list(zip(fnames,
@@ -103,7 +106,7 @@ class TableDomainMapper(explanation.DomainMapper):
                                     fweights)))
                 out_list = [out_dict.get(x[0], (str(x[0]), 0.0, 0.0)) for x in exp]
         else:
-            out_list = list(zip(self.exp_feature_names,
+            out_list = list(zip(exp_feature_names_copy,
                                 self.feature_values,
                                 weights))
             if not show_all:
