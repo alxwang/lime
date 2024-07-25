@@ -178,8 +178,7 @@ class Explanation(object):
         plt.barh(pos, vals, align='center', color=colors)
 
         # Enable word wrapping for the labels on the y-axis
-        names = [x[0].replace('_', ' ') for x in exp]  # Replace "_" with a space in each 
-        # names = [textwrap.fill(name, width=10) for name in names]
+        names = [textwrap.fill(name.replace('_', ' '), width=10) for name in names]
         plt.yticks(pos, names)
         if self.mode == "classification":
             title = 'Local explanation for class %s' % self.class_names[label]
